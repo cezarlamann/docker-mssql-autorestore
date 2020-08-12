@@ -112,7 +112,7 @@ if [ $(grep -v '^$' <<< $BKPS_NA_PASTA | wc -l) -gt 0 ]; then
   # if we already have the db in place, seems that we are re-running
   # a stopped container, so... Success
   DB_FOUND=$(grep $WORKSPACE_DB_NAME <<< $DBS_ATUAIS)
-  if [ $(grep -v '^$' <<< $IS_DB_FOUND | wc -l) -gt 0 ]; then
+  if [ $(grep -v '^$' <<< $DB_FOUND | wc -l) -gt 0 ]; then
     echo "$AUTORESTOREPROMPT Database $WORKSPACE_DB_NAME already exists. You can connect to it. Bye."
     exit 0
   fi
