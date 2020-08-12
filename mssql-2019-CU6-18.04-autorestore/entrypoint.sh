@@ -1,3 +1,3 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-/opt/mssql/bin/sqlservr & sh /var/opt/mssql/autorestorescript.sh
+/opt/mssql/bin/sqlservr & bash /var/opt/mssql/autorestorescript.sh && tail -f /dev/null

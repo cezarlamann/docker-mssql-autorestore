@@ -1,7 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # "backups on folder" variable
 BKPS_NA_PASTA=0
+
+AUTORESTOREPROMPT="[ MSSQL AUTO-RESTORE SCRIPT ]:"
 
 # testa se existe a pasta de backups
 # check if the "backups" folder exists
@@ -38,17 +40,17 @@ ACESSO_LOG=$([ -r /var/opt/mssql/log/errorlog ]; echo $?)
 while [ $ACESSO_LOG -ne 0 ] && [ $TENTATIVAS -lt 10 ]
 do
   ACESSO_LOG=$([ -r /var/opt/mssql/log/errorlog ]; echo $?)
-  echo 'SQL Server Log Not Accessible yet... Waiting 2 seconds. Attempt '$((TENTATIVAS+1))
-  sleep 2
+  echo "$AUTORESTOREPROMPT SQL Server Log Not Accessible yet... Waiting 5 seconds. Attempt "$((TENTATIVAS+1))
+  sleep 5
   TENTATIVAS=$((TENTATIVAS+1))
 done
 
 # if it doesn't manage to check, bail with an error
 if [ $TENTATIVAS -eq 10 ] && [ $ACESSO_LOG -ne 0 ]; then
-  echo 'Script nao conseguiu acesso ao log do MSSQL em 10 tentativas. Abortando.'
+  echo "$AUTORESTOREPROMPT The script didn't manage to get access to MSSQL Log file in 10 attempts. Aborting..."
   exit 1
 else
-  echo 'Log MSSQL acessivel. Continuando...'
+  echo "$AUTORESTOREPROMPT MSSQL log file is reachable. Continuing..."
 fi
 
 TENTATIVAS=0
@@ -57,19 +59,19 @@ DBREADY=0
 # check if the mssql service is ready...
 while [ $DBREADY -lt 1 ] && [ $TENTATIVAS -lt 10 ]
 do
-  echo 'Checking SQL Server readiness... Attempt '$((TENTATIVAS+1))
+  echo "$AUTORESTOREPROMPT Checking SQL Server readiness... Waiting for 5 seconds. Attempt "$((TENTATIVAS+1))
   DBREADY=$(tail -30 /var/opt/mssql/log/errorlog | grep 'SQL Server is now ready' | wc -l)
 
-  sleep 2
+  sleep 5
   TENTATIVAS=$((TENTATIVAS+1))
 done
 
 # if it doesn't manage to check in 10 attempts, bail with an error.
 if [ $TENTATIVAS -eq 10 ] && [ $DBREADY -lt 1 ]; then
-  echo 'MSSQL nao subiu em 10 tentativas. Abortando.'
+  echo "$AUTORESTOREPROMPT MSSQL didn't start after 10 attempts. Aborting..."
   exit 1
 else
-  echo 'Servico MSSQL pronto. Continuando...'
+  echo "$AUTORESTOREPROMPT MSSQL Service ready. Continuing..."
 fi
 
 cd /var/opt/mssql
@@ -79,14 +81,16 @@ cd /var/opt/mssql
 # get the "*.bak" files from volume folder...
 BKPS_NA_PASTA=$(ls -1Lpq $PWD/backups/* | grep .bak)
 
-if [ $(wc -l <<< $BKPS_NA_PASTA) -gt 0 ]; then
+echo "$AUTORESTOREPROMPT Backup files available in the folder: $BKPS_NA_PASTA"
+
+if [ $(grep -v '^$' <<< $BKPS_NA_PASTA | wc -l) -gt 0 ]; then
   # we got some.
-  echo 'Backups disponiveis'
+  echo "$AUTORESTOREPROMPT Backup files available."
 
   # if the user doesn't give a db name, assume it is "mydb" and go.
   if [ -z "$WORKSPACE_DB_NAME" ]
   then
-    echo "\$WORKSPACE_DB_NAME is empty. using 'mydb' as name."
+    echo "$AUTORESTOREPROMPT \$WORKSPACE_DB_NAME is empty. using 'mydb' as name."
     WORKSPACE_DB_NAME="mydb"
   fi
 
@@ -105,6 +109,15 @@ if [ $(wc -l <<< $BKPS_NA_PASTA) -gt 0 ]; then
     -Q 'set nocount on;select name from sys.databases;set nocount off' \
     -h-1)
 
+  # if we already have the db in place, seems that we are re-running
+  # a stopped container, so... Success
+  DB_FOUND=$(grep $WORKSPACE_DB_NAME <<< $DBS_ATUAIS)
+  if [ $(grep -v '^$' <<< $IS_DB_FOUND | wc -l) -gt 0 ]; then
+    echo "$AUTORESTOREPROMPT Database $WORKSPACE_DB_NAME already exists. You can connect to it. Bye."
+    exit 0
+  fi
+
+  echo "$AUTORESTOREPROMPT Current databases on server: $DBS_ATUAIS"
   # Query de retornar os bancos de dados de um arquivo BAK.
   # Precisa ser alocada em uma table variable,
   # pois eh o resultado de um exec sobre arquivo.
@@ -151,17 +164,26 @@ if [ $(wc -l <<< $BKPS_NA_PASTA) -gt 0 ]; then
   # pega a primeira linha (head -1) da primeira coluna ($1)
   # grab the first line from first row
   DBNAME=$(awk -F "\"*,\"*" '{ n=split($1,a,/\\/); print a[n] }' <<< $BKP_NO_BAK | head -1)
+
+  echo "$AUTORESTOREPROMPT DBNAME (from file): $DBNAME"
+
   # pega a primeira linha (head -1) da segunda coluna ($2)
   # grab the first line from second row
   DBFILE=$(awk -F "\"*,\"*" '{ n=split($2,a,/\\/); print a[n] }' <<< $BKP_NO_BAK | head -1)
+
+  echo "$AUTORESTOREPROMPT DBFILE (from file): $DBFILE"
 
   # pega a segunda linha (head -2 | tail -1) da primeira coluna ($1)
   # grab the second line from first row
   DBLOGNAME=$(awk -F "\"*,\"*" '{ n=split($1,a,/\\/); print a[n] }' <<< $BKP_NO_BAK | head -2 | tail -1)
 
+  echo "$AUTORESTOREPROMPT DBLOGNAME (from file): $DBLOGNAME"
+
   # pega a segunda linha (head -2 | tail -1) da segunda coluna ($2)
   # grab the second line from second row
   DBLOGFILE=$(awk -F "\"*,\"*" '{ n=split($2,a,/\\/); print a[n] }' <<< $BKP_NO_BAK | head -2 | tail -1)
+
+  echo "$AUTORESTOREPROMPT DBLOGFILE (from file): $DBLOGFILE"
 
   # sql de restore
   # "restore database statement"
@@ -175,8 +197,10 @@ if [ $(wc -l <<< $BKPS_NA_PASTA) -gt 0 ]; then
 
   # execute the restore stmt and redirect the resulting log to the
   # mounted volume so you can check whatever happened.
-  /opt/mssql-tools/bin/sqlcmd -S tcp:localhost,1433 -U sa -P $SA_PASSWORD -d master -Q "$RESTORE" -o /var/opt/mssql/backups/dbrestore.log
+  /opt/mssql-tools/bin/sqlcmd -S tcp:localhost,1433 -U sa -P $SA_PASSWORD -d master -Q "$RESTORE"
+
+
 else
   # No "*.bak" files found. go.
-  echo 'Sem backups disponiveis'
+  echo "$AUTORESTOREPROMPT No backups available. Go ahead!"
 fi

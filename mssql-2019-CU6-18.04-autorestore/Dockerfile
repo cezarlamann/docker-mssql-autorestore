@@ -1,17 +1,21 @@
 FROM mcr.microsoft.com/mssql/server:2019-CU6-ubuntu-18.04
 
-MAINTAINER Cezar Augustus Lamann
+LABEL maintainer="Cezar Augustus Lamann"
+LABEL version="1.0_2019_cu6_18.04"
+LABEL description=" \
+    This image aims to provide an MS SQL Server testing environment \
+    so it's easier for testers and devs to have a database backup \
+    restored automatically and persisted during container cycles."
 
-ENV WORKSPACE_DB_NAME
+ARG build_time_db_name="mydb"
+ENV WORKSPACE_DB_NAME=$build_time_db_name
+
 WORKDIR /var/opt/mssql
 
 COPY autorestorescript.sh /var/opt/mssql/
 COPY entrypoint.sh /var/opt/mssql/
 
-RUN chmod a+x /var/opt/mssql/autorestorescript.sh && \
-    chmod a+x /var/opt/mssql/autorestorescript.sh
-
 EXPOSE 1433
 
-USER mssql
+USER root #we need to run it as root due to a bug when using volumes
 ENTRYPOINT /bin/bash ./entrypoint.sh
