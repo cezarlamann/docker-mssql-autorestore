@@ -4,11 +4,11 @@ Microsoft SQL Server Docker images with automatic restoration of .bak files for 
 **https://hub.docker.com/r/cezarlamann/mssql_ar**
 
 ## How to use it
-`docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=<MySaf3stPassw0rd>" -e "WORKSPACE_DB_NAME=any_db_name" -p 1433:1433 -v "/path/to/folder/with/bakfiles:/var/opt/mssql/backups" -v "<volume_here>:/var/opt/mssql/data" -d --name sql1 mssql_ar:<tag_here>`
+`docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=<MySaf3stPassw0rd>" -e "WORKSPACE_DB_NAME=any_db_name" -p 1433:1433 -v "/path/to/folder/with/bakfiles:/var/opt/mssql/backups" -v "<volume_here>:/var/opt/mssql/data" -d --name sql1 cezarlamann/mssql_ar:<tag_here>`
   
 ### Example: How do I run on Linux, personally?
   
-``docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=MySaf3stPassw0rd#" -e "WORKSPACE_DB_NAME=any_db_name" -p 1433:1433 -v "`pwd`/dbs:/var/opt/mssql/backups" -v "sql1volume:/var/opt/mssql/data" -d --name sql1 mssql_ar:latest``
+``docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=MySaf3stPassw0rd#" -e "WORKSPACE_DB_NAME=any_db_name" -p 1433:1433 -v "`pwd`/dbs:/var/opt/mssql/backups" -v "sql1volume:/var/opt/mssql/data" -d --name sql1 cezarlamann/mssql_ar:latest``
 
 ## Notes
 - `any_db_name`: is the name that will be given to the restored database, e.g.: If you have a database bak file where the `.mdf` file was named `foo` and you set the `WORKSPACE_DB_NAME` variable to `bar`, when you connect to the container, your restored database will be named `bar`;
