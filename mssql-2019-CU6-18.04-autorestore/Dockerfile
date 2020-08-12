@@ -17,5 +17,5 @@ COPY entrypoint.sh /var/opt/mssql/
 
 EXPOSE 1433
 
-USER root #we need to run it as root due to a bug when using volumes
+USER root
 ENTRYPOINT /bin/bash ./entrypoint.sh
