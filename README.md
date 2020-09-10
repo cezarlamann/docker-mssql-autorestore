@@ -12,6 +12,9 @@ Microsoft SQL Server Docker images with automatic restoration of .bak files for 
 
 To see what the container is doing when starting up, hit `docker logs -f <container_name>`, like `docker logs -f sql1` if you use the example above.
 
+### More SQL Server Variables:
+Refer to [this page](https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-configure-environment-variables?view=sql-server-ver15).
+
 ## Notes
 - `any_db_name`: is the name that will be given to the restored database, e.g.: If you have a database bak file where the `.mdf` file was named `foo` and you set the `WORKSPACE_DB_NAME` variable to `bar`, when you connect to the container, your restored database will be named `bar`;
 - If you omit the `WORKSPACE_DB_NAME` variable, your database will be named as `mydb`;
