@@ -1,7 +1,7 @@
-FROM mcr.microsoft.com/mssql/server:2019-CU6-ubuntu-18.04
+FROM mcr.microsoft.com/mssql/server:2022-latest
 
 LABEL maintainer="Cezar Augustus Lamann"
-LABEL version="1.0_2019_cu6_18.04"
+LABEL version="1.1_2022_20.04"
 LABEL description=" \
     This image aims to provide an MS SQL Server testing environment \
     so it's easier for testers and devs to have a database backup \

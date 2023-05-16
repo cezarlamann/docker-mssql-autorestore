@@ -60,7 +60,7 @@ DBREADY=0
 while [ $DBREADY -lt 1 ] && [ $TENTATIVAS -lt 10 ]
 do
   echo "$AUTORESTOREPROMPT Checking SQL Server readiness... Waiting for 5 seconds. Attempt "$((TENTATIVAS+1))
-  DBREADY=$(tail -30 /var/opt/mssql/log/errorlog | grep 'SQL Server is now ready' | wc -l)
+  DBREADY=$(tail -n +1 /var/opt/mssql/log/errorlog | grep 'SQL Server is now ready' | wc -l)
 
   sleep 5
   TENTATIVAS=$((TENTATIVAS+1))
