@@ -80,8 +80,8 @@ execute_with_retry() {
         # Execute the function passed as an argument with provided arguments
         console_log "Attempting to run the command \"$func\". Attempt $((attempt + 1))..."
         "$@" && console_log "Attempt $((attempt + 1)) worked." &&return 0  # If the function returns success, exit loop and return 0
-        console_log "Attempt $attempt failed. Retrying in $sleep_time seconds..."
-        sleep $sleep_time
+        console_log "Attempt $((attempt + 1)) failed. Retrying in $sleep_time seconds..."
+        sleep "$sleep_time"
         ((attempt++))
     done
     
