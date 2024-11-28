@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source ./functions.sh
+source ./util_functions.sh
+source ./db_functions.sh
 
 MSSQL_DATA_ROOT="/var/opt/mssql"
 MSSQL_DATA="$MSSQL_DATA_ROOT/data"
@@ -19,6 +20,6 @@ execute_with_retry check_log_access $RETRIES $SLEEP_TIME
 
 execute_with_retry check_sql_server_ready $RETRIES $SLEEP_TIME
 
-restore_backups "localhost" "1433" "sa" "$MSSQL_SA_PASSWORD" "$MSSQL_BKPS" "$MSSQL_DATA"
+restore_backups "localhost" "1433" "sa" "$SA_PASSWORD" "$MSSQL_BKPS" "$MSSQL_DATA"
 
 
